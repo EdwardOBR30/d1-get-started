@@ -13,7 +13,7 @@
 	"d1_databases": [
     {
       "binding": "DB",
-      "database_name": "prod-d1-tutorial",
+      "database_name": "tradelink-d1",
       "database_id": "3426c414-6d5e-4157-84a0-0ed24bddccd2"
     }
   ]
