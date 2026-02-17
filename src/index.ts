@@ -10,48 +10,34 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // Handle CORS preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders(),
-      });
+      return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
     const withCORS = (res: Response) => {
       const headers = new Headers(res.headers);
-      Object.entries(corsHeaders()).forEach(([k, v]) =>
-        headers.set(k, v)
-      );
-      return new Response(res.body, {
-        status: res.status,
-        headers,
-      });
+      for (const [k, v] of Object.entries(corsHeaders())) headers.set(k, v);
+      return new Response(res.body, { status: res.status, headers });
     };
 
-    // Health check
     if (url.pathname === "/health") {
       const row = await env.DB.prepare("SELECT 1 AS ok").first<{ ok: number }>();
       return withCORS(Response.json({ ok: row?.ok === 1 }));
     }
 
-    // Lead endpoint
     if (url.pathname === "/api/lead" && request.method === "POST") {
       try {
-        const body = await request.json();
+        const body: any = await request.json();
 
-        const name = body.name || "";
-        const email = body.email || "";
-        const phone = body.phone || "";
-        const service = body.service || "";
-        const message = body.message || "";
+        const name = String(body?.name ?? "");
+        const email = String(body?.email ?? "");
+        const phone = String(body?.phone ?? "");
+        const service = String(body?.service ?? "");
+        const message = String(body?.message ?? "");
 
         if (!email || !service) {
           return withCORS(
-            Response.json(
-              { error: "Email and service are required" },
-              { status: 400 }
-            )
+            Response.json({ error: "Email and service are required" }, { status: 400 })
           );
         }
 
@@ -63,10 +49,8 @@ export default {
           .run();
 
         return withCORS(Response.json({ ok: true }));
-      } catch (err) {
-        return withCORS(
-          Response.json({ error: "Server error" }, { status: 500 })
-        );
+      } catch {
+        return withCORS(Response.json({ error: "Server error" }, { status: 500 }));
       }
     }
 
